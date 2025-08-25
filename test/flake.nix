@@ -1,29 +1,25 @@
 {
-  description = "SOVG test flake";
+  description = "test flake";
 
   inputs = {
     nixpkgs = {
       url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     };
 
-    sovg = {
+    fajli = {
       url = "path:../";
     };
   };
 
-  outputs = { self, nixpkgs, sops-nix, sovg, ... }:
+  outputs = { self, nixpkgs, fajli, ... }:
+  let
+    fajliDef = fajli.configure {
+      modules = [
+        ./module.nix
+      ];
+    };
+  in
   {
-    packages = (sovg.configure {
-      sequence =
-        (map (h: import ./ssh-keys.nix h) [
-          "thorin"
-          "pippin"
-          "gandalf"
-          "frodo"
-        ])
-        ++ [
-          ./shared.nix
-        ];
-    }).packages;
+    packages = fajliDef.packages;
   };
 }

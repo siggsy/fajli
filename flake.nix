@@ -1,5 +1,5 @@
 {
-  description = "Siggsy's ideal 'vars' implementation (using sops-nix)";
+  description = "Fajli - a file generator for the nix world";
 
   outputs = { nixpkgs, ... }: 
   let
@@ -17,32 +17,20 @@
     }) systems);
   in {
 
-    nixosModules = {
-      default = {
-        imports = [
-          ./interface.nix
-        ];
-      };
-    };
-
-    configure = { sequence, ... }: {
+    configure = { modules, ... }: {
       packages = eachSystem ({ pkgs, ... }: {
-        sovg = import ./sovg.nix {
+        fajli = import ./fajli.nix {
           inherit pkgs;
-          inherit (pkgs) lib;
-          batches = map (m: (pkgs.lib.evalModules {
+          lib = pkgs.lib;
+          config = (pkgs.lib.evalModules {
+            modules = [ ./module ] ++ modules;
             specialArgs = {
               inherit pkgs;
-              sofgLib = import ./lib.nix { inherit pkgs; };
+              lib = pkgs.lib // { fajli = (import ./lib.nix { inherit pkgs; }); };
             };
-            modules = [
-              ./interface.nix
-              m
-            ];
-          }).config) sequence;
+          }).config;
         };
       });
     };
-
   };
 }
