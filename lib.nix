@@ -1,5 +1,9 @@
 { pkgs, ... }:
 {
+  modules = {
+    hostKeys = ./modules/hostKeys;
+  };
+
   crypts = {
     age =
       { recipients, identityFiles, ... }:
