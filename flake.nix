@@ -23,7 +23,7 @@
           inherit pkgs;
           lib = pkgs.lib;
           config = (pkgs.lib.evalModules {
-            modules = [ ./module ] ++ modules;
+            modules = [ ./modules/main ] ++ modules;
             specialArgs = {
               inherit pkgs;
               lib = pkgs.lib // { fajli = (import ./lib.nix { inherit pkgs; }); };

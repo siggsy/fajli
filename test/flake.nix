@@ -15,7 +15,7 @@
   let
     fajliDef = fajli.configure {
       modules = [
-        ./module.nix
+        ./host.nix
       ];
     };
   in

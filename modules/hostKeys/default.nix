@@ -1,6 +1,6 @@
 { lib, config, ... }:
 let
-  inherit (lib) mkOption submodule submoduleWith;
+  inherit (lib) mkOption submoduleWith;
   inherit (lib.types) attrsOf listOf;
   inherit (lib.types) str bool;
 
@@ -35,8 +35,8 @@ in
 {
   options = {
     hosts = {
-      type = attrsOf hostModule;
-      default = { };
+      type = listOf str;
+      default = [];
     };
 
     symmetricEncryption = mkOption {
@@ -112,6 +112,7 @@ in
           name = "shared/${d.name}";
           value = d // {
             name = "shared/${d.name}";
+            after = d.after ++ ["host-keys"];
             files = builtins.mapAttrs (
               name: f:
               f
@@ -136,6 +137,7 @@ in
               name = name;
               value = d // {
                 name = name;
+                after = ["host-keys"];
                 files = builtins.mapAttrs (
                   name: f:
                   f

@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ lib, ... }:
 {
   imports = [
     lib.fajli.modules.hostKeys
@@ -10,14 +10,20 @@
   ];
 
   perHost = {
-    "ssh" = {
+    "folder1" = {
       files = {
-
+        "file1" = {
+          age.enable = false;
+        };
+        "file2" = {
+          age.enable = true;
+        };
       };
 
-      script = lib.fajli.scripts.ssh-keygen {
-
-      };
+      script = ''
+        echo "epik1" >> "$out/file1"
+        echo "epik2" >> "$out/file2"
+      '';
     };
   };
 
