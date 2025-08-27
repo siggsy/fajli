@@ -1,4 +1,4 @@
-{ name, path, lib, ... }:
+{ name, lib, ... }:
 let
   inherit (lib) mkOption mkEnableOption;
   inherit (lib.types) listOf;
@@ -12,12 +12,6 @@ in
       description = ''
         Name of the file to generate
       '';
-    };
-
-    path = mkOption {
-      type = str;
-      readOnly = true;
-      default = "${path}/${name}";
     };
 
     age = {

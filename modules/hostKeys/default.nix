@@ -1,19 +1,8 @@
 { lib, config, ... }:
 let
-  inherit (lib) mkOption submoduleWith;
-  inherit (lib.types) attrsOf listOf;
+  inherit (lib) mkOption;
+  inherit (lib.types) attrsOf listOf submoduleWith;
   inherit (lib.types) str bool;
-
-  hostModule =
-    { name, ... }:
-    {
-      options = {
-        name = mkOption {
-          type = str;
-          default = name;
-        };
-      };
-    };
 
   extendedFolderModule = submoduleWith {
     modules = [
@@ -28,15 +17,14 @@ let
         };
       }
     ];
-
     shorthandOnlyDefinesConfig = true;
   };
 in
 {
   options = {
-    hosts = {
+    hosts = mkOption {
       type = listOf str;
-      default = [];
+      default = [ ];
     };
 
     symmetricEncryption = mkOption {
@@ -49,7 +37,7 @@ in
       default = [ ];
     };
 
-    defaultRecepients = mkOption {
+    defaultRecipients = mkOption {
       type = listOf str;
       default = [ ];
     };
@@ -68,91 +56,76 @@ in
   config =
     let
       hosts = config.hosts;
-      hostRecepient = h: config.folders."host-keys".files."${h}_public".path;
-      hostIdentity = h: config.folders."host-keys".files."${h}_private".path;
-      recepientFilesOf = f: map hostRecepient f.hosts;
+      hostRecipient = h: config.folders."host-keys/${h}".files."public".path;
+      hostIdentity = h: config.folders."host-keys/${h}".files."private".path;
+      recipientFilesOf = f: map hostRecipient f.hosts;
       identityFilesOf = f: map hostIdentity f.hosts;
-      hostKeysFolder = {
-        "host-keys" = {
-          files = builtins.listToAttrs (
-            builtins.concatMap (h: [
-              {
-                name = "${h}_private";
-                value = {
-                  age = {
-                    enable = true;
-                    recepients = config.defaultRecepients;
-                    identityFiles = config.defaultIdentityFiles;
-                  };
+      hostKeysFolders = builtins.listToAttrs (
+        builtins.map (h: {
+          name = "host-keys/${h}";
+          value = {
+            files = {
+              "private" = {
+                age = {
+                  enable = true;
+                  recipients = config.defaultRecipients;
+                  identityFiles = config.defaultIdentityFiles;
                 };
-              }
-              {
-                name = "${h}_public";
-                value = {
-                  age.enable = false;
-                };
-              }
-            ]) hosts
-          );
+              };
+              "public" = {
+                age.enable = false;
+              };
+            };
 
-          script = builtins.concatStringsSep "\n" (
-            map (
-              h:
-              lib.fajli.scripts.ssh-keygen {
-                private = "${h}_private";
-                public = "${h}_public";
-              }
-            ) hosts
-          );
-        };
-      };
+            script = lib.fajli.scripts.ssh-keygen { };
+          };
+        }) hosts
+      );
 
       sharedFolders = builtins.listToAttrs (
         builtins.map (d: {
           name = "shared/${d.name}";
-          value = d // {
-            name = "shared/${d.name}";
-            after = d.after ++ ["host-keys"];
-            files = builtins.mapAttrs (
-              name: f:
-              f
-              // (lib.optionalAttrs (f.age.enable) {
-                recepients = f.recepients ++ config.defaultRecepients ++ recepientFilesOf;
-                identityFiles = f.identityFiles ++ config.defaultIdentityFiles ++ identityFilesOf;
-              })
-            ) d.files;
-          };
+          value = lib.mkMerge [
+            (removeAttrs d [ "hosts" ])
+            {
+              after = [ "host-keys" ];
+              files = builtins.mapAttrs (
+                name: f:
+                lib.optionalAttrs (f.age.enable) {
+                  age.recipients = config.defaultRecipients;
+                  age.recipientFiles = recipientFilesOf d;
+                  age.identityFiles = config.defaultIdentityFiles ++ identityFilesOf d;
+                }
+              ) d.files;
+            }
+          ];
         }) (builtins.attrValues config.shared)
       );
 
       perHostFolders = builtins.listToAttrs (
         builtins.concatMap (
           d:
-          map (
-            h:
-            let
-              name = "per-host/${h}/${d.name}";
-            in
-            {
-              name = name;
-              value = d // {
-                name = name;
-                after = ["host-keys"];
+          map (h: {
+            name = "per-host/${h}/${d.name}";
+            value = lib.mkMerge [
+              (removeAttrs d [ "hosts" ])
+              {
+                after = [ "host-keys" ];
                 files = builtins.mapAttrs (
                   name: f:
-                  f
-                  // (lib.optionalAttrs (f.age.enable) {
-                    recepients = f.recepients ++ config.defaultRecepients ++ hostRecepient h;
-                    identityFiles = f.identityFiles ++ config.defaultIdentityFiles ++ hostIdentity h;
+                  (lib.optionalAttrs (f.age.enable) {
+                    age.recipients = config.defaultRecipients;
+                    age.recipientFiles = [ (hostRecipient h) ];
+                    age.identityFiles = config.defaultIdentityFiles ++ [ (hostIdentity h) ];
                   })
                 ) d.files;
-              };
-            }
-          ) d.hosts
+              }
+            ];
+          }) d.hosts
         ) (builtins.attrValues config.perHost)
       );
     in
     {
-      folders = hostKeysFolder // sharedFolders // perHostFolders;
+      folders = hostKeysFolders // sharedFolders // perHostFolders;
     };
 }

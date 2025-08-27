@@ -7,7 +7,7 @@
 let
   sort =
     l:
-    (lib.lists.toposort (a: b: builtins.elem b.name a.before || builtins.elem a.name b.after) l).result;
+    (lib.lists.toposort (a: b: builtins.any (f: lib.hasPrefix f b.name) a.before || builtins.any (f: lib.hasPrefix f a.name) b.after) l).result;
   sortedFolders = sort (builtins.attrValues config.folders);
   unlinesMap = f: xs: builtins.concatStringsSep "\n" (map f xs);
   genArg = flag: arg: "-${flag} \"${arg}\"";
@@ -28,11 +28,70 @@ pkgs.writeShellApplication {
     echo ",--------------------------------------------"
     echo "| Fajli - nix file generator"
     echo "'--------------------------------------------"
+
+    ${lib.optionalString config.debug "set -x"}
+
+    #################
+    # Path checks
+    #################
+
     if ! proj_root=$(git rev-parse --show-toplevel 2>/dev/null); then
-      echo "Not in git repository! Exiting ..." >&2
-      exit 1
+      ${if config.allowGitless then
+          ''
+            echo "Not in git repository. All changes to files will be final!"
+            echo -n "Continue in $PWD? [y/N] "
+            read -r ans
+            if [ -z "$ans" ] || [ "$(echo "$ans" | tr '[:upper:]' '[:lower:]')" != "y" ]; then
+              echo "Exiting ..."
+              exit 0
+            fi
+            proj_root="$PWD"
+          ''
+        else
+          ''
+            echo "Not in git repository! Exiting ..." >&2
+            exit 1
+          ''
+      }
     fi
-    cd "$proj_root"
+
+    fajli_path=$(realpath "$proj_root/${config.path}")
+    readonly fajli_path
+
+    if ! fajli_git=$(git rev-parse --show-toplevel 2>/dev/null); then
+      ${if config.allowGitless then
+          ''
+            echo "Not in git repository. All changes to files will be final!"
+            echo -n "Continue in $PWD? [y/N] "
+            read -r ans
+            if [ -z "$ans" ] || [ "$(echo "$ans" | tr '[:upper:]' '[:lower:]')" != "y" ]; then
+              echo "Exiting ..."
+              exit 0
+            fi
+            fajli_git="$PWD"
+          ''
+        else
+          ''
+            echo "Not in git repository! Exiting ..." >&2
+            exit 1
+          ''
+      }
+    else
+      # shellcheck disable=SC2050
+      if [ "$fajli_git" != "$proj_root" ] && [ "${toString config.allowGitless}" == "0" ]; then
+        echo "Configured relative path falls outside project directory" >&2
+        exit 1
+      fi
+    fi
+
+    main_dir=$(mktemp -d)
+    trap 'rm -rf "$main_dir"' EXIT
+
+    if [ -d "$fajli_path" ]; then
+      cp -r "$fajli_path" "$main_dir/"
+    fi
+
+    cd "$main_dir/"
 
     ${unlinesMap (folder: ''
       #################
@@ -94,5 +153,20 @@ pkgs.writeShellApplication {
         fi
       '') (builtins.attrValues (lib.filterAttrs (n: v: v.age.enable) folder.files))}
     '') sortedFolders}
+    
+    echo "Executing transaction"
+    rm -rf "$fajli_path"
+    mv "$main_dir/$(basename "$(dirname "$fajli_path")")" "$fajli_path"
+
+    # TODO: a more detailed commit message
+    if git -C "$fajli_git" rev-parse --show-toplevel &>/dev/null; then
+      echo "Commiting changes"
+      # shellcheck disable=SC2016
+      echo 'git -C "$fajli_git" add "$fajli_path"'
+      # shellcheck disable=SC2016
+      echo 'git -C "$fajli_git" commit -m "fajli: $(date)"'
+    fi
+
+    echo "Done!"
   '';
 }

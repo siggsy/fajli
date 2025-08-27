@@ -1,13 +1,11 @@
 {
   name,
   lib,
-  path,
-  config,
   ...
 }:
 let
   inherit (lib) mkOption;
-  inherit (lib.types) submoduleWith listOf attrsOf;
+  inherit (lib.types) submodule listOf attrsOf;
   inherit (lib.types) str lines;
 in
 {
@@ -18,11 +16,6 @@ in
       description = ''
         Folder name (subpath)
       '';
-    };
-
-    path = mkOption {
-      type = str;
-      default = "${path}/${name}";
     };
 
     before = mkOption {
@@ -42,15 +35,7 @@ in
     };
 
     files = mkOption {
-      type = attrsOf (submoduleWith {
-        modules = [
-          ./file.nix
-        ];
-        specialArgs = {
-          path = config.path;
-        };
-        shorthandOnlyDefinesConfig = true;
-      });
+      type = attrsOf (submodule ./file.nix);
       description = ''
         Files contained in this folder
       '';

@@ -1,10 +1,14 @@
 { lib, config, ... }:
 let
   inherit (lib) mkOption;
-  inherit (lib.types) attrsOf submoduleWith;
-  inherit (lib.types) str;
+  inherit (lib.types) attrsOf submodule;
+  inherit (lib.types) str bool;
 in
 {
+  imports = [
+    ./paths.nix
+  ];
+
   options = {
     path = mkOption {
       type = str;
@@ -13,16 +17,24 @@ in
       '';
     };
 
+    allowGitless = mkOption {
+      type = bool;
+      default = false;
+      description = ''
+        Wether to allow generating in gitless folders.
+      '';
+    };
+
+    debug = mkOption {
+      type = bool;
+      default = false;
+      description = ''
+        Add set -x to generated script
+      '';
+    };
+
     folders = mkOption {
-      type = attrsOf (submoduleWith {
-        modules = [
-          ./folder.nix
-        ];
-        specialArgs = {
-          path = config.path;
-        };
-        shorthandOnlyDefinesConfig = true;
-      });
+      type = attrsOf (submodule ./folder.nix);
     };
   };
 }
