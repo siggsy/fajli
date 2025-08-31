@@ -190,10 +190,11 @@ pkgs.writeShellApplication {
     # TODO: a more detailed commit message
     ${lib.optionalString config.commitChanges ''
       if git -C "$fajli_git" rev-parse --show-toplevel &>/dev/null; then
+        git -C "$fajli_git" add "$FAJLI_PATH"
+
         if [ -z "$(git -C "$fajli_git" diff "$FAJLI_PATH")" ]; then
           echo "No changes were made!"
         else
-          git -C "$fajli_git" add "$FAJLI_PATH"
           echo "Commiting changes"
           git -C "$fajli_git" commit -m "fajli: $(date)"
         fi
