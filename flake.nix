@@ -23,7 +23,7 @@
     in
     {
       configure =
-        { modules, ... }:
+        { modules, specialArgs, ... }:
         {
           packages = eachSystem (
             { pkgs, ... }:
@@ -36,7 +36,7 @@
                 config =
                   (lib.evalModules {
                     modules = [ ./modules/main ] ++ modules;
-                    specialArgs = {
+                    specialArgs = specialArgs // {
                       inherit pkgs lib;
                     };
                   }).config;
