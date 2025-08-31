@@ -16,11 +16,11 @@
   ];
 
   defaultRecipients = [
-    (lib.fajli.literal "age1s2jwm42qcfaug0euu5fv7d7udka0x2vq7mcpmc5lc9u46t9nwsss2yl6pr")
+    (lib.fajli.literal "age1tdzspj2xucz94nyr7wng576lcs2uux02hj0fs7a3n6l33ncuzyyq6cfqym")
   ];
 
   defaultIdentityFiles = [
-    "$HOME/.config/sops/age/keys.txt"
+    "$FAJLI_PROJ_ROOT/test/age.txt"
   ];
 
   perHost = {

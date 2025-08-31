@@ -67,7 +67,7 @@ pkgs.writeShellApplication {
     # Path checks
     #################
 
-    if ! proj_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+    if ! FAJLI_PROJ_ROOT=$(git rev-parse --show-toplevel 2>/dev/null); then
       ${if config.allowGitless then
           ''
             echo "Not in git repository. All changes to files will be final!"
@@ -77,7 +77,7 @@ pkgs.writeShellApplication {
               echo "Exiting ..."
               exit 0
             fi
-            proj_root="$PWD"
+            FAJLI_PROJ_ROOT="$PWD"
           ''
         else
           ''
@@ -87,8 +87,8 @@ pkgs.writeShellApplication {
       }
     fi
 
-    fajli_path=$(realpath "$proj_root/${config.path}")
-    readonly fajli_path
+    FAJLI_PATH=$(realpath "$FAJLI_PROJ_ROOT/${config.path}")
+    readonly FAJLI_PATH
 
     if ! fajli_git=$(git rev-parse --show-toplevel 2>/dev/null); then
       ${if config.allowGitless then
@@ -110,7 +110,7 @@ pkgs.writeShellApplication {
       }
     else
       # shellcheck disable=SC2050
-      if [ "$fajli_git" != "$proj_root" ] && [ "${toString config.allowGitless}" == "0" ]; then
+      if [ "$fajli_git" != "$FAJLI_PROJ_ROOT" ] && [ "${toString config.allowGitless}" == "0" ]; then
         echo "Configured relative path falls outside project directory" >&2
         exit 1
       fi
@@ -119,8 +119,8 @@ pkgs.writeShellApplication {
     main_dir=$(mktemp -d)
     trap 'rm -rf "$main_dir"' EXIT
 
-    if [ -d "$fajli_path" ]; then
-      cp -r "$fajli_path" "$main_dir/"
+    if [ -d "$FAJLI_PATH" ]; then
+      cp -r "$FAJLI_PATH" "$main_dir/"
     fi
 
     cd "$main_dir/"
@@ -168,7 +168,9 @@ pkgs.writeShellApplication {
         fi
 
         if ! [ -f "$file_enc" ] || [ -n "$REKEY" ]; then
-          echo "Re-encrypting existing file"
+          if [ -f "$file_enc" ]; then
+            echo "Re-encrypting existing file"
+          fi
           age --armor --encrypt ${if f.age.symmetric then identitiesOf f else recipientsOf f} -o "$file_enc" "$file_org" 
         fi
       '') (encrypedFiles folder)}
@@ -182,18 +184,17 @@ pkgs.writeShellApplication {
     '') sortedFolders}
     
     echo "Executing transaction"
-    rm -rf "$fajli_path"
-    mv "$main_dir/$(basename "$(dirname "$fajli_path")")" "$fajli_path"
+    rm -rf "$FAJLI_PATH"
+    mv "$main_dir/$(basename "$(dirname "$FAJLI_PATH")")" "$FAJLI_PATH"
 
     # TODO: a more detailed commit message
-    if git -C "$fajli_git" rev-parse --show-toplevel &>/dev/null; then
-      echo "Commiting changes"
-      # shellcheck disable=SC2016
-      echo 'git -C "$fajli_git" add "$fajli_path"'
-      # shellcheck disable=SC2016
-      echo 'git -C "$fajli_git" commit -m "fajli: $(date)"'
-    fi
-
+    ${lib.optionalString config.commitChanges ''
+      if git -C "$fajli_git" rev-parse --show-toplevel &>/dev/null; then
+        echo "Commiting changes"
+        git -C "$fajli_git" add "$FAJLI_PATH"
+        git -C "$fajli_git" commit -m "fajli: $(date)"
+      fi
+    '' }
     echo "Done!"
   '';
 }
