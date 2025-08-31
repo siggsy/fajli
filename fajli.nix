@@ -192,7 +192,7 @@ pkgs.writeShellApplication {
       if git -C "$fajli_git" rev-parse --show-toplevel &>/dev/null; then
         git -C "$fajli_git" add "$FAJLI_PATH"
 
-        if [ -z "$(git -C "$fajli_git" diff "$FAJLI_PATH")" ]; then
+        if [ -z "$(git -C "$fajli_git" diff --staged --minimal "$FAJLI_PATH")" ]; then
           echo "No changes were made!"
         else
           echo "Commiting changes"
