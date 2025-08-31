@@ -185,7 +185,7 @@ pkgs.writeShellApplication {
     
     echo "Executing transaction"
     rm -rf "$FAJLI_PATH"
-    mv "$main_dir/$(basename "$(dirname "$FAJLI_PATH")")" "$FAJLI_PATH"
+    mv "$main_dir/$(basename "$FAJLI_PATH")" "$FAJLI_PATH"
 
     # TODO: a more detailed commit message
     ${lib.optionalString config.commitChanges ''
