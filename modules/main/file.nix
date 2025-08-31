@@ -16,26 +16,14 @@ in
 
     age = {
       enable = mkEnableOption "age";
+      symmetric = mkEnableOption "symmetric encryption";
       recipients = mkOption {
-        type = listOf str;
+        type = listOf lib.fajli.types.key;
         default = [];
-        description = ''
-          List of age recipients
-        '';
-      };
-      recipientFiles = mkOption {
-        type = listOf str;
-        default = [];
-        description = ''
-          List of age recipient files
-        '';
       };
       identityFiles = mkOption {
         type = listOf str;
         default = [];
-        description = ''
-          List of age identity files
-        '';
       };
     };
   };

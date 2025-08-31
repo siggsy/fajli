@@ -29,15 +29,15 @@ in
 
     symmetricEncryption = mkOption {
       type = bool;
-      default = true;
-    };
-
-    defaultIdentityFiles = mkOption {
-      type = listOf str;
-      default = [ ];
+      default = false;
     };
 
     defaultRecipients = mkOption {
+      type = listOf lib.fajli.types.key;
+      default = [ ];
+    };
+
+    defaultIdentityFiles = mkOption {
       type = listOf str;
       default = [ ];
     };
@@ -56,7 +56,7 @@ in
   config =
     let
       hosts = config.hosts;
-      hostRecipient = h: config.folders."host-keys/${h}".files."public".path;
+      hostRecipient = h: { type = "path"; value = config.folders."host-keys/${h}".files."public".path; };
       hostIdentity = h: config.folders."host-keys/${h}".files."private".path;
       recipientFilesOf = f: map hostRecipient f.hosts;
       identityFilesOf = f: map hostIdentity f.hosts;
@@ -70,6 +70,7 @@ in
                   enable = true;
                   recipients = config.defaultRecipients;
                   identityFiles = config.defaultIdentityFiles;
+                  symmetric = lib.mkForce config.symmetricEncryption;
                 };
               };
               "public" = {
@@ -77,7 +78,7 @@ in
               };
             };
 
-            script = lib.fajli.scripts.ssh-keygen { };
+            script = lib.fajli.scripts.ssh-keygen { promptExisting = true; };
           };
         }) hosts
       );
@@ -92,9 +93,9 @@ in
               files = builtins.mapAttrs (
                 name: f:
                 lib.optionalAttrs (f.age.enable) {
-                  age.recipients = config.defaultRecipients;
-                  age.recipientFiles = recipientFilesOf d;
+                  age.recipients = config.defaultRecipients ++ recipientFilesOf d;
                   age.identityFiles = config.defaultIdentityFiles ++ identityFilesOf d;
+                  age.symmetric = lib.mkForce config.symmetricEncryption;
                 }
               ) d.files;
             }
@@ -114,9 +115,9 @@ in
                 files = builtins.mapAttrs (
                   name: f:
                   (lib.optionalAttrs (f.age.enable) {
-                    age.recipients = config.defaultRecipients;
-                    age.recipientFiles = [ (hostRecipient h) ];
+                    age.recipients = config.defaultRecipients ++ [ (hostRecipient h) ];
                     age.identityFiles = config.defaultIdentityFiles ++ [ (hostIdentity h) ];
+                    age.symmetric = lib.mkForce config.symmetricEncryption;
                   })
                 ) d.files;
               }

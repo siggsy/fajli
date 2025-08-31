@@ -25,6 +25,14 @@ in
       '';
     };
 
+    commitChanges = mkOption {
+      type = bool;
+      default = false;
+      description = ''
+        Commit changes if all files successfully generate.
+      '';
+    };
+
     debug = mkOption {
       type = bool;
       default = false;

@@ -6,8 +6,9 @@
 
   path = "vars";
 
-  allowGitless = true;
+  allowGitless = false;
   debug = false;
+  commitChanges = false;
 
   hosts = [
     "machine1"
@@ -15,7 +16,11 @@
   ];
 
   defaultRecipients = [
-    "age1s2jwm42qcfaug0euu5fv7d7udka0x2vq7mcpmc5lc9u46t9nwsss2yl6pr"
+    (lib.fajli.literal "age1s2jwm42qcfaug0euu5fv7d7udka0x2vq7mcpmc5lc9u46t9nwsss2yl6pr")
+  ];
+
+  defaultIdentityFiles = [
+    "$HOME/.config/sops/age/keys.txt"
   ];
 
   perHost = {

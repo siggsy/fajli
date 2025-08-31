@@ -13,10 +13,16 @@ let
   genArg = flag: arg: "-${flag} \"${arg}\"";
   recipientsOf =
     file:
+    let
+      part = builtins.partition (r: r.type == "literal") file.age.recipients;
+      literals = part.right;
+      paths = part.wrong;
+    in
     builtins.concatStringsSep " " (
-      map (genArg "-r") file.age.recipients ++ map (genArg "-R") file.age.recipientFiles
+      map (l: genArg "r" l.value) literals ++ map (p: genArg "R" p.value) paths
     );
-  identitiesOf = file: builtins.concatStringsSep " " (map (genArg "-i") file.age.identityFiles);
+  identitiesOf = file: builtins.concatStringsSep " " (map (genArg "i") file.age.identityFiles);
+  encrypedFiles = folder: builtins.attrValues (lib.filterAttrs (n: v: v.age.enable) folder.files);
 in
 pkgs.writeShellApplication {
   name = "falji";
@@ -25,11 +31,37 @@ pkgs.writeShellApplication {
     pkgs.git
   ];
   text = ''
+    ${lib.optionalString config.debug "set -x"}
+
+    REKEY=
+    OVERRIDE_IDENTITY=
+
+    while [ $# -gt 0 ]; do
+      case $1 in
+        -r|--rekey)
+          REKEY=true
+          shift
+          ;;
+        -i|--identity)
+          OVERRIDE_IDENTITY=$2
+          shift
+          shift
+          ;;
+        *)
+          echo "usage: fajli [opts]"
+          echo ""
+          echo "opts:"
+          echo "  -r --rekey      rekey encrypted files"
+          echo "  -i --identity   override identity when decrypting"
+          echo ""
+          exit 1
+          ;;
+      esac
+    done
+
     echo ",--------------------------------------------"
     echo "| Fajli - nix file generator"
     echo "'--------------------------------------------"
-
-    ${lib.optionalString config.debug "set -x"}
 
     #################
     # Path checks
@@ -126,32 +158,27 @@ pkgs.writeShellApplication {
       ${unlinesMap (f: ''
         file_org="$final/${f.name}"
         file_enc="$final/${f.name}.age"
-        file_rec="$final/.${f.name}.rec"
 
-        tmp_rec=$(mktemp)
-        ${lib.optionalString (
-          f.age.recipientFiles != [ ]
-        ) ''cat ${builtins.concatStringsSep " " (f.age.recipientFiles)} >> "$tmp_rec"''}
-        echo "${builtins.concatStringsSep "\n" (f.age.recipients)}" >> "$tmp_rec"
-
-        reencrypt=0
-        if ! [ -f "$file_rec" ] || ! diff "$file_rec" "$tmp_rec" &>/dev/null; then
-          cp "$tmp_rec" "$file_rec"
-          reencrypt=1
+        if [ -f "$file_enc" ]; then
+          if [ -z "$OVERRIDE_IDENTITY" ]; then
+            age --decrypt ${identitiesOf f} -o "$file_org" "$file_enc"
+          else
+            age --decrypt -i "$OVERRIDE_IDENTITY" -o "$file_org" "$file_enc"
+          fi
         fi
-        rm "$tmp_rec"
 
-        if [ -f "$file_enc" ] && [ "$reencrypt" -eq 1 ]; then
+        if ! [ -f "$file_enc" ] || [ -n "$REKEY" ]; then
           echo "Re-encrypting existing file"
-          age --decrypt ${identitiesOf f} -o "$file_org" "$file_enc"
-          rm "$file_enc"
+          age --armor --encrypt ${if f.age.symmetric then identitiesOf f else recipientsOf f} -o "$file_enc" "$file_org" 
         fi
+      '') (encrypedFiles folder)}
+    '') sortedFolders}
 
-        if [ "$reencrypt" -eq 1 ]; then
-          age --armor --encrypt ${recipientsOf f} -o "$file_enc" "$file_org" 
-          rm "$file_org"
-        fi
-      '') (builtins.attrValues (lib.filterAttrs (n: v: v.age.enable) folder.files))}
+    # Cleanup temp unencrypted
+    ${unlinesMap (folder: ''
+      ${unlinesMap (file: ''
+        rm "${folder.path}/${file.name}"
+      '') (encrypedFiles folder)}
     '') sortedFolders}
     
     echo "Executing transaction"
