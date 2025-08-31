@@ -7,7 +7,7 @@
   path = "vars";
 
   allowGitless = false;
-  debug = false;
+  debug = true;
   commitChanges = false;
 
   hosts = [

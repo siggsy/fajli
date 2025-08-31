@@ -23,7 +23,7 @@
     in
     {
       configure =
-        { modules, specialArgs, ... }:
+        { modules, specialArgs ? {}, ... }:
         {
           packages = eachSystem (
             { pkgs, ... }:

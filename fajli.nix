@@ -31,7 +31,7 @@ pkgs.writeShellApplication {
     pkgs.git
   ];
   text = ''
-    ${lib.optionalString config.debug "set -x"}
+    # set -x
 
     REKEY=
     OVERRIDE_IDENTITY=
@@ -120,7 +120,7 @@ pkgs.writeShellApplication {
     trap 'rm -rf "$main_dir"' EXIT
 
     if [ -d "$FAJLI_PATH" ]; then
-      cp -r "$FAJLI_PATH" "$main_dir/"
+      cp -a "$FAJLI_PATH/." "$main_dir/"
     fi
 
     cd "$main_dir/"
@@ -129,7 +129,7 @@ pkgs.writeShellApplication {
       #################
       # Generation
       #################
-      echo "[ Generating folder ${folder.name} ]"
+      echo "[ Generating folder ${folder.path} ]"
 
       final="${folder.path}"
       if [ -d "$final" ]; then
@@ -142,7 +142,7 @@ pkgs.writeShellApplication {
 
         cd "$tmp"
 
-        out="$out" ${pkgs.writeShellScript "gen-${folder.name}" folder.script}
+        out="$out" bash ${lib.optionalString config.debug "-x"} ${pkgs.writeText "gen-${folder.name}" folder.script}
 
         cd "$curr"
         rm -rf "$tmp"
@@ -185,7 +185,7 @@ pkgs.writeShellApplication {
     
     echo "Executing transaction"
     rm -rf "$FAJLI_PATH"
-    mv "$main_dir/$(basename "$FAJLI_PATH")" "$FAJLI_PATH"
+    mv "$main_dir" "$FAJLI_PATH"
 
     # TODO: a more detailed commit message
     ${lib.optionalString config.commitChanges ''

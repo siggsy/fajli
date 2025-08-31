@@ -1,17 +1,15 @@
-{ lib, config, ... }: 
+{ lib, ... }: 
 let
   inherit (lib) mkOption;
   inherit (lib.types) submodule attrsOf;
   inherit (lib.types) str;
-
-  path = config.path;
 
   fileExtension = folder: { name, ... }: {
     options = {
       path = mkOption {
         type = str;
         readOnly = true;
-        default = "${path}/${folder}/${name}";
+        default = "${folder}/${name}";
       };
     };
   };
@@ -21,7 +19,7 @@ let
       path = mkOption {
         type = str;
         readOnly = true;
-        default = "${path}/${name}";
+        default = "${name}";
       };
 
       files = mkOption {
