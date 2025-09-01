@@ -90,7 +90,7 @@ pkgs.writeShellApplication {
     FAJLI_PATH=$(realpath "$FAJLI_PROJ_ROOT/${config.path}")
     readonly FAJLI_PATH
 
-    if ! fajli_git=$(git rev-parse --show-toplevel 2>/dev/null); then
+    if ! fajli_git=$(git -C "$FAJLI_PATH" rev-parse --show-toplevel 2>/dev/null); then
       ${if config.allowGitless then
           ''
             echo "Not in git repository. All changes to files will be final!"
