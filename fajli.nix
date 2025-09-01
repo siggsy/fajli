@@ -31,7 +31,7 @@ pkgs.writeShellApplication {
     pkgs.git
   ];
   text = ''
-    set -x
+    # set -x
 
     REKEY=
     OVERRIDE_IDENTITY=
