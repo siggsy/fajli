@@ -35,6 +35,7 @@ pkgs.writeShellApplication {
 
     REKEY=
     OVERRIDE_IDENTITY=
+    OVERRIDE_PATH=
 
     while [ $# -gt 0 ]; do
       case $1 in
@@ -47,12 +48,18 @@ pkgs.writeShellApplication {
           shift
           shift
           ;;
+        -p|--path)
+          OVERRIDE_PATH=$2
+          shift
+          shift
+          ;;
         *)
           echo "usage: fajli [opts]"
           echo ""
           echo "opts:"
           echo "  -r --rekey      rekey encrypted files"
           echo "  -i --identity   override identity when decrypting"
+          echo "  -p --path       override path"
           echo ""
           exit 1
           ;;
@@ -87,7 +94,11 @@ pkgs.writeShellApplication {
       }
     fi
 
-    FAJLI_PATH=$(realpath "$FAJLI_PROJ_ROOT/${config.path}")
+    if [ -z "$OVERRIDE_PATH" ]; then
+      FAJLI_PATH=$(realpath "$FAJLI_PROJ_ROOT/${config.path}")
+    else
+      FAJLI_PATH=$(realpath "$OVERRIDE_PATH")
+    fi
     readonly FAJLI_PATH
 
     if ! fajli_git=$(git -C "$(dirname "$FAJLI_PATH")" rev-parse --show-toplevel 2>/dev/null); then
