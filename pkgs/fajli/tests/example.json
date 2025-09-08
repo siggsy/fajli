@@ -1,0 +1,292 @@
+{
+    "allowGitless": false,
+    "commitChanges": false,
+    "debug": true,
+    "defaultIdentityFiles": [
+        "$FAJLI_PROJ_ROOT/test/age.txt"
+    ],
+    "defaultRecipients": [
+        {
+            "type": "literal",
+            "value": "age1tdzspj2xucz94nyr7wng576lcs2uux02hj0fs7a3n6l33ncuzyyq6cfqym"
+        }
+    ],
+    "folders": {
+        "host-keys/machine1": {
+            "after": [],
+            "before": [],
+            "files": {
+                "private": {
+                    "age": {
+                        "enable": true,
+                        "identityFiles": [
+                            "$FAJLI_PROJ_ROOT/test/age.txt"
+                        ],
+                        "recipients": [
+                            {
+                                "type": "literal",
+                                "value": "age1tdzspj2xucz94nyr7wng576lcs2uux02hj0fs7a3n6l33ncuzyyq6cfqym"
+                            }
+                        ],
+                        "symmetric": false
+                    },
+                    "name": "private",
+                    "path": "host-keys/machine1/private"
+                },
+                "public": {
+                    "age": {
+                        "enable": false,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "public",
+                    "path": "host-keys/machine1/public"
+                }
+            },
+            "name": "host-keys/machine1",
+            "path": "host-keys/machine1",
+            "script": "existing=n\necho -n \"Use existing key? [y/N]: \"\nread -r existing\n\nexisting=\"$(echo \"$existing\" | tr '[:upper:]' '[:lower:]')\"\n\n\nif [ \"$existing\" == \"y\" ]; then\n  echo -n \"Public key: \"\nread -r public\n\n  echo -n \"Private key: \"\nprivate=$(</dev/stdin)\n\n  echo \"$public\" > \"$out/public\"\n  echo \"$private\" > \"$out/private\"\nelse\n  /nix/store/fqgmj6865g7h25s0sfcw7wdfl5d6bi2l-openssh-10.0p2/bin/ssh-keygen -t ed25519 -N \"\" -C \"\" -q -f key\n  mv key.pub \"$out/public\"\n  mv key \"$out/private\"\nfi\n"
+        },
+        "host-keys/machine2": {
+            "after": [],
+            "before": [],
+            "files": {
+                "private": {
+                    "age": {
+                        "enable": true,
+                        "identityFiles": [
+                            "$FAJLI_PROJ_ROOT/test/age.txt"
+                        ],
+                        "recipients": [
+                            {
+                                "type": "literal",
+                                "value": "age1tdzspj2xucz94nyr7wng576lcs2uux02hj0fs7a3n6l33ncuzyyq6cfqym"
+                            }
+                        ],
+                        "symmetric": false
+                    },
+                    "name": "private",
+                    "path": "host-keys/machine2/private"
+                },
+                "public": {
+                    "age": {
+                        "enable": false,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "public",
+                    "path": "host-keys/machine2/public"
+                }
+            },
+            "name": "host-keys/machine2",
+            "path": "host-keys/machine2",
+            "script": "existing=n\necho -n \"Use existing key? [y/N]: \"\nread -r existing\n\nexisting=\"$(echo \"$existing\" | tr '[:upper:]' '[:lower:]')\"\n\n\nif [ \"$existing\" == \"y\" ]; then\n  echo -n \"Public key: \"\nread -r public\n\n  echo -n \"Private key: \"\nprivate=$(</dev/stdin)\n\n  echo \"$public\" > \"$out/public\"\n  echo \"$private\" > \"$out/private\"\nelse\n  /nix/store/fqgmj6865g7h25s0sfcw7wdfl5d6bi2l-openssh-10.0p2/bin/ssh-keygen -t ed25519 -N \"\" -C \"\" -q -f key\n  mv key.pub \"$out/public\"\n  mv key \"$out/private\"\nfi\n"
+        },
+        "per-host/machine1/folder1": {
+            "after": [
+                "host-keys"
+            ],
+            "before": [],
+            "files": {
+                "file1": {
+                    "age": {
+                        "enable": false,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "file1",
+                    "path": "per-host/machine1/folder1/file1"
+                },
+                "file2": {
+                    "age": {
+                        "enable": true,
+                        "identityFiles": [
+                            "$FAJLI_PROJ_ROOT/test/age.txt",
+                            "host-keys/machine1/private"
+                        ],
+                        "recipients": [
+                            {
+                                "type": "literal",
+                                "value": "age1tdzspj2xucz94nyr7wng576lcs2uux02hj0fs7a3n6l33ncuzyyq6cfqym"
+                            },
+                            {
+                                "type": "path",
+                                "value": "host-keys/machine1/public"
+                            }
+                        ],
+                        "symmetric": false
+                    },
+                    "name": "file2",
+                    "path": "per-host/machine1/folder1/file2"
+                }
+            },
+            "name": "folder1",
+            "path": "per-host/machine1/folder1",
+            "script": "echo \"epik1\" >> \"$out/file1\"\necho \"epik2\" >> \"$out/file2\"\n"
+        },
+        "per-host/machine2/folder1": {
+            "after": [
+                "host-keys"
+            ],
+            "before": [],
+            "files": {
+                "file1": {
+                    "age": {
+                        "enable": false,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "file1",
+                    "path": "per-host/machine2/folder1/file1"
+                },
+                "file2": {
+                    "age": {
+                        "enable": true,
+                        "identityFiles": [
+                            "$FAJLI_PROJ_ROOT/test/age.txt",
+                            "host-keys/machine2/private"
+                        ],
+                        "recipients": [
+                            {
+                                "type": "literal",
+                                "value": "age1tdzspj2xucz94nyr7wng576lcs2uux02hj0fs7a3n6l33ncuzyyq6cfqym"
+                            },
+                            {
+                                "type": "path",
+                                "value": "host-keys/machine2/public"
+                            }
+                        ],
+                        "symmetric": false
+                    },
+                    "name": "file2",
+                    "path": "per-host/machine2/folder1/file2"
+                }
+            },
+            "name": "folder1",
+            "path": "per-host/machine2/folder1",
+            "script": "echo \"epik1\" >> \"$out/file1\"\necho \"epik2\" >> \"$out/file2\"\n"
+        },
+        "shared/shared1": {
+            "after": [
+                "host-keys"
+            ],
+            "before": [],
+            "files": {
+                "file1": {
+                    "age": {
+                        "enable": false,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "file1",
+                    "path": "shared/shared1/file1"
+                },
+                "file2": {
+                    "age": {
+                        "enable": true,
+                        "identityFiles": [
+                            "$FAJLI_PROJ_ROOT/test/age.txt",
+                            "host-keys/machine1/private",
+                            "host-keys/machine2/private"
+                        ],
+                        "recipients": [
+                            {
+                                "type": "literal",
+                                "value": "age1tdzspj2xucz94nyr7wng576lcs2uux02hj0fs7a3n6l33ncuzyyq6cfqym"
+                            },
+                            {
+                                "type": "path",
+                                "value": "host-keys/machine1/public"
+                            },
+                            {
+                                "type": "path",
+                                "value": "host-keys/machine2/public"
+                            }
+                        ],
+                        "symmetric": false
+                    },
+                    "name": "file2",
+                    "path": "shared/shared1/file2"
+                }
+            },
+            "name": "shared1",
+            "path": "shared/shared1",
+            "script": "echo \"epik1\" >> \"$out/file1\"\necho \"epik2\" >> \"$out/file2\"\n"
+        }
+    },
+    "hosts": [
+        "machine1",
+        "machine2"
+    ],
+    "path": "vars",
+    "perHost": {
+        "folder1": {
+            "after": [],
+            "before": [],
+            "files": {
+                "file1": {
+                    "age": {
+                        "enable": false,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "file1"
+                },
+                "file2": {
+                    "age": {
+                        "enable": true,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "file2"
+                }
+            },
+            "hosts": [
+                "machine1",
+                "machine2"
+            ],
+            "name": "folder1",
+            "script": "echo \"epik1\" >> \"$out/file1\"\necho \"epik2\" >> \"$out/file2\"\n"
+        }
+    },
+    "shared": {
+        "shared1": {
+            "after": [],
+            "before": [],
+            "files": {
+                "file1": {
+                    "age": {
+                        "enable": false,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "file1"
+                },
+                "file2": {
+                    "age": {
+                        "enable": true,
+                        "identityFiles": [],
+                        "recipients": [],
+                        "symmetric": false
+                    },
+                    "name": "file2"
+                }
+            },
+            "hosts": [
+                "machine1",
+                "machine2"
+            ],
+            "name": "shared1",
+            "script": "echo \"epik1\" >> \"$out/file1\"\necho \"epik2\" >> \"$out/file2\"\n"
+        }
+    },
+    "symmetricEncryption": false
+}

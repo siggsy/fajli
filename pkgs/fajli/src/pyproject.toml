@@ -1,0 +1,11 @@
+[project]
+name = "fajli"
+version = "0.0.1"
+requires-python = ">= 3.12"
+
+[project.scripts]
+fajli = "fajli:main"
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"

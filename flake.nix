@@ -31,9 +31,8 @@
               lib = pkgs.lib.extend(final: prev: { fajli = import ./lib.nix { inherit pkgs; lib = final; }; });
             in
             {
-              fajli = import ./fajli.nix {
-                inherit pkgs lib;
-                config =
+              fajli = pkgs.callPackage ./pkgs/fajli {
+                fajliConfig =
                   (lib.evalModules {
                     modules = [ ./modules/main ] ++ modules;
                     specialArgs = specialArgs // {
