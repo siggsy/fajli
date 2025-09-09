@@ -7,7 +7,15 @@ rec {
   types = {
     key = pkgs.lib.mkOptionType {
       name = "key";
-      check = (v: builtins.isAttrs v && builtins.hasAttr "type" v && builtins.elem v.type ["literal" "path"]);
+      check = (
+        v:
+        builtins.isAttrs v
+        && builtins.hasAttr "type" v
+        && builtins.elem v.type [
+          "literal"
+          "path"
+        ]
+      );
     };
   };
 
@@ -29,11 +37,14 @@ rec {
         echo -n "${prompt}: "
         ${var}=$(</dev/stdin)
       '';
-    
+
     yesNo =
       { var, prompt }:
       ''
-        ${inputs.single { inherit var; prompt = "${prompt} [y/N]"; }}
+        ${inputs.single {
+          inherit var;
+          prompt = "${prompt} [y/N]";
+        }}
         ${var}="$(echo "''$${var}" | tr '[:upper:]' '[:lower:]')"
       '';
   };
