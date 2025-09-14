@@ -4,96 +4,89 @@ import shutil
 import os
 import subprocess
 import tempfile
+import sys
 
 from .utils import Fajli
+
 
 def generate(
     fajli: Fajli,
 ) -> int:
-    with fajli.transactional() as workdir:
-        for folder, folder_cfg in fajli:
-            fajli.generate(workdir, folder_cfg)
-            fajli.decrypt(workdir, folder_cfg)
-            fajli.encrypt(workdir, folder_cfg)
+    with fajli.transactional():
+        for folder in fajli:
+            print(f"[ Generating {folder.name} ]")
+            if not folder.generate():
+                print(f"Folder {folder.name} already exists. Skipping ...")
+            for file in folder:
+                file.decrypt()
+            for file in folder:
+                file.encrypt()
+
+def modify_with(
+    fajli: Fajli,
+    file: Path,
+    modify
+):
+    file_abs = file.absolute()
+    with fajli.transactional():
+        file_found = False
+
+        res = None
+        for folder in fajli:
+            for file in folder:
+                file.decrypt()
+                is_encrypted = file.age_enabled()
+                matches_age = str(file_abs).endswith(f'{file.cfg['path']}.age')
+                matches = str(file_abs).endswith(file.cfg['path'])
+
+                if is_encrypted and matches_age or matches:
+                    modified, res = modify(file.cfg['path'])
+                    
+                    if modified and is_encrypted:
+                        file.encrypt(rekey=True)
+
+                    break
+            if res:
+                break
+        
+        if not res:
+            print(f"File {file_abs} is not a part of fajli")
+            sys.exit(1)
+        
+        return res
 
 def get(
     fajli: Fajli,
     file: Path,
 ) -> str:
-
-    with fajli.transactional() as workdir:
-        for folder, folder_cfg in fajli:
-            fajli.decrypt(workdir, folder_cfg)
-
-            for file_name, file_cfg in folder_cfg['files'].items():
-                is_encrypted = file_cfg['age']['enable']
-                matches_age = str(file.absolute()).endswith(f'{file_cfg['path']}.age')
-                matches = str(file.absolute()).endswith(file_cfg['path'])
-
-                if is_encrypted and matches_age or matches:
-                    with open(workdir / file_cfg['path'], 'r') as f:
-                        return f.read()
-
-        print(f"File {file} is not a part of fajli")
-        sys.exit(1)
+    def modify(path: Path):
+        with open(path, 'r') as f:
+            return False, f.read()
+        
+    return modify_with(fajli, file, modify)
 
 def update(
     fajli: Fajli,
     out_file: Path,
     in_file = os.sys.stdin,
-) -> int:
-    with fajli.transactional() as workdir:
-        file_found = False
+):
+    def modify(path: Path):
+        if in_file.isatty():
+            print("Enter file contents (ctrl-d when done):")
+        with open(path, 'w') as f:
+            f.write(in_file.read())
+        return True, True
 
-        for folder, folder_cfg in fajli:
-            fajli.decrypt(workdir, folder_cfg)
+    modify_with(fajli, out_file, modify)
 
-            for file_name, file_cfg in folder_cfg['files'].items():
-                is_encrypted = file_cfg['age']['enable']
-                matches_age = str(out_file.absolute()).endswith(f'{file_cfg['path']}.age')
-                matches = str(out_file.absolute()).endswith(file_cfg['path'])
-
-                if is_encrypted and matches_age or matches:
-                    if in_file.isatty():
-                        print("Enter file contents (ctrl-d when done):")
-                    with open(workdir / file_cfg['path'], 'w') as f:
-                        f.writelines(in_file)
-                    
-                    if is_encrypted:
-                        (workdir / f'{file_cfg['path']}.age').unlink()
-                        fajli.encrypt(workdir, folder_cfg)
-
-                    file_found = True
-                    break
-            
-            if file_found:
-                break
 
 def edit(
     fajli: Fajli,
     out_file: Path,
-) -> int:
-    with fajli.transactional() as workdir:
-        file_found = False
+):
+    def modify(path: Path):
+        editor = os.environ.get('EDITOR') or sys.exit("Missing EDITOR environment")
+        subprocess.call(args=[ editor, path])
+        return True, True
 
-        for folder, folder_cfg in fajli:
-            fajli.decrypt(workdir, folder_cfg)
-
-            for file_name, file_cfg in folder_cfg['files'].items():
-                is_encrypted = file_cfg['age']['enable']
-                matches_age = str(out_file.absolute()).endswith(f'{file_cfg['path']}.age')
-                matches = str(out_file.absolute()).endswith(file_cfg['path'])
-
-                if is_encrypted and matches_age or matches:
-                    editor = os.environ.get('EDITOR') or sys.exit("Missing EDITOR environment")
-                    subprocess.call(args=[ editor, workdir / file_cfg['path']])
-                    
-                    if is_encrypted:
-                        (workdir / f'{file_cfg['path']}.age').unlink()
-                        fajli.encrypt(workdir, folder_cfg)
-
-                    file_found = True
-                    break
-            
-            if file_found:
-                break
+    modify_with(fajli, out_file, modify)

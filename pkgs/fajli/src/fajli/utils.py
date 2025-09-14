@@ -7,6 +7,7 @@ import os
 import subprocess
 import shutil
 from contextlib import contextmanager
+import sys
 
 class Fajli():
     def __init__(self, path: str, config: dict[str, Any], identities: list[str]):
@@ -14,104 +15,9 @@ class Fajli():
         self.identities = config['defaultIdentityFiles'] + identities
         self.path = Path(path)
     
-    def identities_of(self, file_cfg: dict[str, Any]) -> list[Path]:
-        return list(map(lambda f: Path(os.path.expandvars(f)), self.identities + file_cfg['age']['identityFiles']))
-
-    def generate(self, workdir: Path, folder_cfg: dict[str, Any]):
-        with tempfile.TemporaryDirectory() as tmpdir, tempfile.TemporaryDirectory() as out:
-            folder_path = workdir / folder_cfg['path']
-            if folder_path.exists():
-                print(f"Folder {folder_cfg['name']} already exists. Skipping ...")
-                return 0
-
-            retained = { k: os.environ[k] for k in ['FAJLI_PATH', 'FAJLI_PROJ_ROOT'] }
-            env = retained | {
-                'PATH': os.environ.get('FAJLI_STDENV'),
-                'out': str(out),
-            }
-
-            script = '''
-            set -euo pipefail
-
-            '''
-            script += folder_cfg['script']
-            
-            ret = subprocess.call(
-                env = env,
-                cwd = tmpdir,
-                args = [ "bash", "-c", script ]
-            )
-
-            for file_name, file_cfg in folder_cfg['files'].items():
-                file_path = Path(str(out)) / file_name
-                final_path = workdir / file_cfg['path']
-                final_path.parent.mkdir(parents=True, exist_ok=True)
-                if file_path.exists():
-                    shutil.copy(file_path, final_path)
-                else:
-                    print(f'Script did not generate file {file}')
-                    return 1
-            
-            if ret != 0:
-                # TODO: inform which script failed
-                return ret
-    
-    def encrypt(self, workdir: Path, folder_cfg: dict[str, Any], rekey=False):
-        for file_name, file_cfg in folder_cfg['files'].items():
-            if not file_cfg['age']['enable']:
-                continue
-
-            file_org = workdir / file_cfg['path']
-            file_enc = workdir / f'{file_cfg['path']}.age'
-
-            if not file_enc.exists() or rekey:
-                ident_args = []
-                if file_cfg['age']['symmetric']:
-                    for ident in self.identities_of(file_cfg):
-                        ident_args += [ "-i", ident.as_posix() ]
-                else:
-                    for rec in file_cfg['age']['recipients']:
-                        match rec['type']:
-                            case 'literal': 
-                                ident_args += [ "-r", rec['value'] ]
-                            case 'path':
-                                ident_args += [ "-R", rec['value'] ]
-
-                ret = subprocess.call(
-                    cwd = workdir,
-                    args = [ "age", "--armor", "--encrypt", *ident_args, "-o", file_enc.absolute(), file_org.absolute() ]
-                )
-
-                if ret != 0:
-                    return ret
-
-
-    def decrypt(self, workdir: Path, folder_cfg: dict[str, Any]):
-        for file_name, file_cfg in folder_cfg['files'].items():
-            if not file_cfg['age']['enable']:
-                continue
-
-            file_org = workdir / file_cfg['path']
-            file_enc = workdir / f'{file_cfg['path']}.age'
-
-            if file_enc.exists() and not file_org.exists():
-                ident_args = []
-                for ident in self.identities_of(file_cfg):
-                    ident_args += [ "-i", ident.as_posix() ]
-
-                ret = subprocess.call(
-                    cwd = workdir,
-                    env = {
-                        'PATH': os.environ.get('FAJLI_STDENV'),
-                    },
-                    args = [ "age", "--decrypt", *ident_args, "-o", file_org.absolute(), file_enc.absolute() ]
-                )
-
-                if ret != 0:
-                    return ret
 
     def __iter__(self):
-        return iter(self.folders.items())
+        return map(lambda p: Folder(p[0], p[1]), self.folders.items())
 
     @contextmanager
     def transactional(self):
@@ -120,16 +26,21 @@ class Fajli():
             if self.path.exists():
                 workdir.rmdir()
                 shutil.copytree(self.path, workdir)
+            
+            old = os.getcwd()
+            os.chdir(workdir)
             yield workdir
 
-            for folder_name, folder_cfg in self:
-                for file_name, file_cfg in folder_cfg['files'].items():
-                    if not file_cfg['age']['enable']:
+            for folder in self:
+                for file in folder:
+                    if not file.cfg['age']['enable']:
                         continue
                         
-                    f = workdir / file_cfg['path']
+                    f = Path(file.cfg['path'])
                     if f.exists():
                         f.unlink()
+
+            os.chdir(old)
 
             shutil.rmtree(self.path, ignore_errors=True)
             shutil.move(workdir, self.path)
@@ -159,3 +70,117 @@ def toposort(folders: dict[str, Any]) -> OrderedDict[str, Any]:
     
     order = list(TopologicalSorter(graph).static_order())
     return OrderedDict([ (key, folders[key]) for key in order ])
+
+
+class Folder():
+    def __init__(self, folder: str, folder_cfg: dict[str, Any]):
+        self.name = folder
+        self.cfg = folder_cfg
+    
+    def __iter__(self):
+        return map(lambda p: File(p[0],p[1]), self.cfg['files'].items())
+    
+    def generate(self):
+        with tempfile.TemporaryDirectory() as tmpdir, tempfile.TemporaryDirectory() as out:
+            folder_path = Path(self.cfg['path'])
+            if folder_path.exists():
+                return False
+
+            retained = { k: os.environ[k] for k in ['FAJLI_PATH', 'FAJLI_PROJ_ROOT'] }
+            env = retained | {
+                'PATH': os.environ.get('FAJLI_STDENV'),
+                'out': str(out),
+            }
+
+            script = '''
+            set -euo pipefail
+
+            '''
+            script += self.cfg['script']
+            
+            ret = subprocess.call(
+                env = env,
+                cwd = tmpdir,
+                args = [ "bash", "-c", script ]
+            )
+
+            for file in self:
+                file_path = Path(str(out)) / file.name
+                final_path = file_cfg['path']
+                final_path.parent.mkdir(parents=True, exist_ok=True)
+                if file_path.exists():
+                    shutil.copy(file_path, final_path)
+                else:
+                    sys.exit(f'Script did not generate file {file.name}')
+            
+            if ret != 0:
+                sys.exit(f'Script failed when generating folder {folder_path}')
+        
+        return True
+
+
+class File():
+    def __init__(self, name: str, cfg: dict[str, Any]):
+        self.name = name
+        self.cfg = cfg
+    
+    def identities(self, additional=[]) -> list[Path]:
+        return list(map(lambda f: Path(os.path.expandvars(f)), additional + self.cfg['age']['identityFiles']))
+    
+    def age_enabled(self):
+        return self.cfg['age']['enable']
+
+    def encrypt(self, rekey=False, identities=[]):
+        if not self.age_enabled():
+            return
+
+        file_org = Path(self.cfg['path'])
+        file_enc = Path(f'{self.cfg['path']}.age')
+
+        if not file_enc.exists() or rekey:
+            ident_args = []
+            if self.cfg['age']['symmetric']:
+                for ident in self.identities(identities):
+                    ident_args += [ "-i", ident.as_posix() ]
+            else:
+                for rec in self.cfg['age']['recipients']:
+                    match rec['type']:
+                        case 'literal': 
+                            ident_args += [ "-r", rec['value'] ]
+                        case 'path':
+                            ident_args += [ "-R", rec['value'] ]
+
+            ret = subprocess.call(
+                args = [
+                    "age", "--armor", "--encrypt", *ident_args,
+                    "-o", file_enc.absolute(), file_org.absolute()
+                ]
+            )
+
+            if ret != 0:
+                sys.exit(f"Failed encrypting file {cfg['path']}")
+
+    def decrypt(self, identities=[]):
+        if not self.age_enabled():
+            return
+
+        file_org = Path(self.cfg['path'])
+        file_enc = Path(f'{self.cfg['path']}.age')
+
+        if file_enc.exists() and not file_org.exists():
+            ident_args = []
+            for ident in self.identities(identities):
+                ident_args += [ "-i", ident.as_posix() ]
+
+            ret = subprocess.call(
+                env = {
+                    'PATH': os.environ.get('FAJLI_STDENV'),
+                },
+                args = [
+                    "age", "--decrypt", *ident_args,
+                    "-o", file_org.absolute(), file_enc.absolute()
+                ]
+            )
+
+            if ret != 0:
+                sys.exit(f"Failed decrypting file {cfg['path']}")
