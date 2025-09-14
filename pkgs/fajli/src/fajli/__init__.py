@@ -8,7 +8,7 @@ import subprocess
 from collections import OrderedDict
 
 from .utils import Fajli
-from .commands import generate, get, set
+from .commands import generate, get, update, edit
 
 # ,-----------------------------------------------------------------------------
 # | CLI
@@ -40,7 +40,7 @@ parser_generate.add_argument('-r', '--rekey', action='store_true', help='rekey e
 
 parser_get.add_argument('file_path', help='File to (decrypt and) print')
 parser_set.add_argument('file_path', help='File to modify')
-
+parser_edit.add_argument('file_path', help='File to edit')
 
 # ,-----------------------------------------------------------------------------
 # | Main
@@ -98,8 +98,10 @@ def main() -> int:
             print(content)
             return 0
         case 'set':
-            set(fajli=fajli, out_file=Path(args.file_path))
+            update(fajli=fajli, out_file=Path(args.file_path))
             return 0
+        case 'edit':
+            edit(fajli=fajli, out_file=Path(args.file_path))
         case 'dump':
             json.dump(config, sys.stdout)
             return 0
