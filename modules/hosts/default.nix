@@ -74,7 +74,12 @@ in
                 };
               };
               "public" = {
-                age.enable = false;
+                age = {
+                  enable = config.symmetricEncryption;
+                  recipients = config.defaultRecipients;
+                  identityFiles = config.defaultIdentityFiles;
+                  symmetric = lib.mkForce config.symmetricEncryption;
+                };
               };
             };
 

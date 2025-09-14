@@ -1,7 +1,7 @@
 { lib, ... }:
 {
   imports = [
-    lib.fajli.modules.hostKeys
+    lib.fajli.modules.hosts
   ];
 
   path = "vars";

@@ -1,7 +1,7 @@
 { pkgs, lib, ... }:
 rec {
   modules = {
-    hostKeys = ./modules/hostKeys;
+    hosts = ./modules/hosts;
   };
 
   types = {
