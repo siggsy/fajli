@@ -11,23 +11,46 @@ from .utils import Fajli
 
 def generate(
     fajli: Fajli,
-) -> int:
+    folders: list[Path],
+    force: bool = False
+):
+    _folders = [ str(f.resolve()) for f in folders ]
     with fajli.transactional():
         for folder in fajli:
-            print(f"[ Generating {folder.name} ]")
-            if not folder.generate():
-                print(f"Folder {folder.name} already exists. Skipping ...")
+            explicit = any(map(lambda f: f.endswith(folder.cfg['path']), _folders))
+            should_generate = len(_folders) == 0 or explicit
+            generated = False
+            if should_generate:
+                print(f"[ Generating {folder.name} ]")
+                generated = folder.generate(force=force or explicit)
+                if not generated:
+                    print(f"Folder {folder.name} already exists. Skipping ...")
+            
             for file in folder:
                 file.decrypt()
             for file in folder:
-                file.encrypt()
+                file.encrypt(rekey=generated)
+
+
+def rekey(
+    fajli: Fajli
+):
+    with fajli.transactional():
+        for folder in fajli:
+            print(f'[ Entering {folder.name} ]')
+            for file in folder:
+                file.decrypt()
+            for file in folder:
+                print(f'Rekeying existing file {file.name}')
+                file.encrypt(rekey=True)
+
 
 def modify_with(
     fajli: Fajli,
     file: Path,
     modify
 ):
-    file_abs = file.absolute()
+    file_abs = file.resolve()
     with fajli.transactional():
         file_found = False
 
@@ -41,13 +64,10 @@ def modify_with(
 
                 if is_encrypted and matches_age or matches:
                     modified, res = modify(file.cfg['path'])
-                    
                     if modified and is_encrypted:
                         file.encrypt(rekey=True)
-
                     break
-            if res:
-                break
+            if res: break
         
         if not res:
             print(f"File {file_abs} is not a part of fajli")

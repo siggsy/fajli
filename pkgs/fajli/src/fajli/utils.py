@@ -9,15 +9,17 @@ import shutil
 from contextlib import contextmanager
 import sys
 
+def expanded_path(path: str) -> Path:
+    return Path(os.path.expandvars(path))
+
 class Fajli():
     def __init__(self, path: str, config: dict[str, Any], identities: list[str]):
         self.folders = toposort(config['folders'])
-        self.identities = config['defaultIdentityFiles'] + identities
+        self.identities = [ expanded_path(i) for i in identities + config['defaultIdentityFiles'] ]
         self.path = Path(path)
-    
 
     def __iter__(self):
-        return map(lambda p: Folder(p[0], p[1]), self.folders.items())
+        return map(lambda p: Folder(self, p[0], p[1]), self.folders.items())
 
     @contextmanager
     def transactional(self):
@@ -73,17 +75,18 @@ def toposort(folders: dict[str, Any]) -> OrderedDict[str, Any]:
 
 
 class Folder():
-    def __init__(self, folder: str, folder_cfg: dict[str, Any]):
+    def __init__(self, fajli: Fajli, folder: str, folder_cfg: dict[str, Any]):
         self.name = folder
         self.cfg = folder_cfg
+        self.fajli = fajli
     
     def __iter__(self):
-        return map(lambda p: File(p[0],p[1]), self.cfg['files'].items())
+        return map(lambda p: File(self.fajli, p[0],p[1]), self.cfg['files'].items())
     
-    def generate(self):
+    def generate(self, force: bool = False):
         with tempfile.TemporaryDirectory() as tmpdir, tempfile.TemporaryDirectory() as out:
             folder_path = Path(self.cfg['path'])
-            if folder_path.exists():
+            if folder_path.exists() and not force:
                 return False
 
             retained = { k: os.environ[k] for k in ['FAJLI_PATH', 'FAJLI_PROJ_ROOT'] }
@@ -106,7 +109,7 @@ class Folder():
 
             for file in self:
                 file_path = Path(str(out)) / file.name
-                final_path = file_cfg['path']
+                final_path = Path(file.cfg['path'])
                 final_path.parent.mkdir(parents=True, exist_ok=True)
                 if file_path.exists():
                     shutil.copy(file_path, final_path)
@@ -120,17 +123,18 @@ class Folder():
 
 
 class File():
-    def __init__(self, name: str, cfg: dict[str, Any]):
+    def __init__(self, fajli: Fajli, name: str, cfg: dict[str, Any]):
         self.name = name
         self.cfg = cfg
+        self.fajli = fajli
     
-    def identities(self, additional=[]) -> list[Path]:
-        return list(map(lambda f: Path(os.path.expandvars(f)), additional + self.cfg['age']['identityFiles']))
+    def identities(self) -> list[Path]:
+        return self.fajli.identities + [ expanded_path(i) for i in self.cfg['age']['identityFiles'] ]
     
     def age_enabled(self):
         return self.cfg['age']['enable']
 
-    def encrypt(self, rekey=False, identities=[]):
+    def encrypt(self, rekey=False):
         if not self.age_enabled():
             return
 
@@ -140,7 +144,7 @@ class File():
         if not file_enc.exists() or rekey:
             ident_args = []
             if self.cfg['age']['symmetric']:
-                for ident in self.identities(identities):
+                for ident in self.identities():
                     ident_args += [ "-i", ident.as_posix() ]
             else:
                 for rec in self.cfg['age']['recipients']:
@@ -153,14 +157,14 @@ class File():
             ret = subprocess.call(
                 args = [
                     "age", "--armor", "--encrypt", *ident_args,
-                    "-o", file_enc.absolute(), file_org.absolute()
+                    "-o", file_enc.resolve(), file_org.resolve()
                 ]
             )
 
             if ret != 0:
                 sys.exit(f"Failed encrypting file {cfg['path']}")
 
-    def decrypt(self, identities=[]):
+    def decrypt(self):
         if not self.age_enabled():
             return
 
@@ -169,7 +173,7 @@ class File():
 
         if file_enc.exists() and not file_org.exists():
             ident_args = []
-            for ident in self.identities(identities):
+            for ident in self.identities():
                 ident_args += [ "-i", ident.as_posix() ]
 
             ret = subprocess.call(
@@ -178,7 +182,7 @@ class File():
                 },
                 args = [
                     "age", "--decrypt", *ident_args,
-                    "-o", file_org.absolute(), file_enc.absolute()
+                    "-o", file_org.resolve(), file_enc.resolve()
                 ]
             )
 
