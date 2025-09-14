@@ -3,8 +3,12 @@ import json
 import argparse
 import sys
 from pathlib import Path
+import subprocess
 
-import fajli.generator
+from collections import OrderedDict
+
+import fajli.commands
+import fajli.folders
 
 # ,-----------------------------------------------------------------------------
 # | CLI
@@ -32,6 +36,12 @@ parser.add_argument('-p', '--path', action='store', help='override generated fol
 parser_generate.add_argument('-f', '--force', action='store_true', help='generate files even if they already exist')
 parser_generate.add_argument('-r', '--rekey', action='store_true', help='rekey encrypted files')
 
+# --  Get/set  -----------------------------------------------------------------
+
+parser_get.add_argument('file_path', help='File to (decrypt and) print')
+parser_set.add_argument('file_path', help='File to modify')
+
+
 # ,-----------------------------------------------------------------------------
 # | Main
 # '-----------------------------------------------------------------------------
@@ -49,24 +59,50 @@ def main() -> int:
         config = json.load(c)
     
     args.path = args.path or config['path']
-    identities = args.identity + config['defaultIdentityFiles']
+
+    # --  Setup environment  ---------------------------------------------------
+
+    cwd = Path(os.getcwd())
+    git_proc = subprocess.Popen(
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE,
+        cwd = cwd.absolute(),
+        args = [ "git", "rev-parse", "--show-toplevel"]
+    )
+    out, err = git_proc.communicate()
+    ret = git_proc.wait()
+    is_git = ret == 0
+
+    if is_git:
+        proj_root = Path(out.rstrip().decode('utf-8'))
+    else:
+        proj_root = cwd
+    
+    fajli_path = proj_root / args.path
+    
+    if proj_root not in fajli_path.parents:
+        print("Specified path falls out of the project. Exiting ...")
+        return 1
+
+    os.environ['FAJLI_PROJ_ROOT'] = str(proj_root.absolute())
+    os.environ['FAJLI_PATH'] = str(fajli_path)
+
+    fajli = folders.Fajli(path=fajli_path, config=config, identities=args.identity)
 
     match args.command:
         case 'generate':
-            ret = generator.generate(
-                folders=config['folders'], path=Path(args.path),
-                rekey=args.rekey, identities=identities,
-            )
+            ret = commands.generate(fajli=fajli)
             return ret
         case 'get':
-            files.get(Path(args.path), identities=identities)
+            content = commands.get(fajli=fajli, file=Path(args.file_path))
+            print(content)
             return 0
         case 'set':
-            files.set(Path(args.path), identities=identities)
+            commands.set(fajli=fajli, out_file=Path(args.file_path))
             return 0
-        case 'edit':
-            files.edit(Path(args.path), identities=identities)
-            return 0
+        # case 'edit':
+        #     commands.edit(fajli_path, identities=identities)
+        #     return 0
         case 'dump':
             json.dump(config, sys.stdout)
             return 0
