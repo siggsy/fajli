@@ -20,10 +20,16 @@ in
       recipients = mkOption {
         type = listOf lib.fajli.types.key;
         default = [];
+        description = ''
+          List of recipients to pass to age (using -r or -R flag)
+        '';
       };
       identityFiles = mkOption {
         type = listOf str;
         default = [];
+        description = ''
+          List of paths to identity files
+        '';
       };
     };
   };

@@ -1,0 +1,43 @@
+{
+  "nodes": {
+    "fajli": {
+      "locked": {
+        "lastModified": 1757844866,
+        "narHash": "sha256-u+vLyxIoC1r+Vr5Nb6lemEfdCbUcnDZNO/OYVvO1DF0=",
+        "owner": "siggsy",
+        "repo": "fajli",
+        "rev": "b8ef5d59e803b3114bc09594ea0b53b859705699",
+        "type": "github"
+      },
+      "original": {
+        "owner": "siggsy",
+        "repo": "fajli",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1757746433,
+        "narHash": "sha256-fEvTiU4s9lWgW7mYEU/1QUPirgkn+odUBTaindgiziY=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "6d7ec06d6868ac6d94c371458fc2391ded9ff13d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "fajli": "fajli",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

@@ -10,6 +10,9 @@ let
         type = str;
         readOnly = true;
         default = "${folder}/${name}";
+        description = ''
+          Relative path to file
+        '';
       };
     };
   };
@@ -20,6 +23,9 @@ let
         type = str;
         readOnly = true;
         default = "${name}";
+        description = ''
+          Relative path to folder
+        '';
       };
 
       files = mkOption {

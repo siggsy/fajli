@@ -43,6 +43,9 @@ in
 
     folders = mkOption {
       type = attrsOf (submodule ./folder.nix);
+      description = ''
+        Folders to generate
+      '';
     };
   };
 }
