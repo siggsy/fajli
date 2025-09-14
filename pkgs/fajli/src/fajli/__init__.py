@@ -7,8 +7,8 @@ import subprocess
 
 from collections import OrderedDict
 
-import fajli.commands
-import fajli.folders
+from .utils import Fajli
+from .commands import generate, get, set
 
 # ,-----------------------------------------------------------------------------
 # | CLI
@@ -87,22 +87,19 @@ def main() -> int:
     os.environ['FAJLI_PROJ_ROOT'] = str(proj_root.absolute())
     os.environ['FAJLI_PATH'] = str(fajli_path)
 
-    fajli = folders.Fajli(path=fajli_path, config=config, identities=args.identity)
+    fajli = Fajli(path=fajli_path, config=config, identities=args.identity)
 
     match args.command:
         case 'generate':
-            ret = commands.generate(fajli=fajli)
+            ret = generate(fajli=fajli)
             return ret
         case 'get':
-            content = commands.get(fajli=fajli, file=Path(args.file_path))
+            content = get(fajli=fajli, file=Path(args.file_path))
             print(content)
             return 0
         case 'set':
-            commands.set(fajli=fajli, out_file=Path(args.file_path))
+            set(fajli=fajli, out_file=Path(args.file_path))
             return 0
-        # case 'edit':
-        #     commands.edit(fajli_path, identities=identities)
-        #     return 0
         case 'dump':
             json.dump(config, sys.stdout)
             return 0

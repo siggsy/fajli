@@ -5,13 +5,12 @@ import os
 import subprocess
 import tempfile
 
-from fajli.utils import transactional
-from fajli.folders import Fajli
+from .utils import Fajli
 
 def generate(
     fajli: Fajli,
 ) -> int:
-    with transactional(fajli.path) as workdir:
+    with fajli.transactional() as workdir:
         for folder, folder_cfg in fajli:
             fajli.generate(workdir, folder_cfg)
             fajli.decrypt(workdir, folder_cfg)
@@ -22,7 +21,7 @@ def get(
     file: Path,
 ) -> str:
 
-    with transactional(fajli.path) as workdir:
+    with fajli.transactional() as workdir:
         for folder, folder_cfg in fajli:
             fajli.decrypt(workdir, folder_cfg)
 
@@ -43,7 +42,7 @@ def set(
     out_file: Path,
     in_file = os.sys.stdin,
 ) -> int:
-    with transactional(fajli.path) as workdir:
+    with fajli.transactional() as workdir:
         file_found = False
 
         for folder, folder_cfg in fajli:

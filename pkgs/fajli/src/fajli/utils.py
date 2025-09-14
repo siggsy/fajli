@@ -6,6 +6,7 @@ import tempfile
 import os
 import subprocess
 import shutil
+from contextlib import contextmanager
 
 class Fajli():
     def __init__(self, path: str, config: dict[str, Any], identities: list[str]):
@@ -113,12 +114,12 @@ class Fajli():
         return iter(self.folders.items())
 
     @contextmanager
-    def transactional(self, path: Path):
+    def transactional(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             workdir = Path(tmpdir)
-            if path.exists():
+            if self.path.exists():
                 workdir.rmdir()
-                shutil.copytree(path, workdir)
+                shutil.copytree(self.path, workdir)
             yield workdir
 
             for folder_name, folder_cfg in self:
@@ -126,10 +127,12 @@ class Fajli():
                     if not file_cfg['age']['enable']:
                         continue
                         
-                    (workdir / file_cfg['path']).unlink()
+                    f = workdir / file_cfg['path']
+                    if f.exists():
+                        f.unlink()
 
-            shutil.rmtree(path, ignore_errors=True)
-            shutil.move(workdir, path)
+            shutil.rmtree(self.path, ignore_errors=True)
+            shutil.move(workdir, self.path)
 
             # TODO: git
 
