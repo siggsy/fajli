@@ -1,6 +1,5 @@
 {
   description = "Fajli - a file generator for the nix world";
-
   outputs =
     { ... }:
     {

@@ -78,7 +78,7 @@ boolean
 ` false `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main)
+ - [../modules/main](../modules/main)
 
 
 
@@ -99,7 +99,7 @@ boolean
 ` false `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main)
+ - [../modules/main](../modules/main)
 
 
 
@@ -120,7 +120,7 @@ boolean
 ` false `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main)
+ - [../modules/main](../modules/main)
 
 
 
@@ -136,8 +136,8 @@ Folders to generate
 attribute set of (submodule)
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/paths\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/paths.nix)
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main)
+ - [../modules/main/paths\.nix](../modules/main/paths.nix)
+ - [../modules/main](../modules/main)
 
 
 
@@ -158,7 +158,7 @@ list of string
 ` [ ] `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder.nix)
+ - [../modules/main/folder\.nix](../modules/main/folder.nix)
 
 
 
@@ -179,7 +179,7 @@ list of string
 ` [ ] `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder.nix)
+ - [../modules/main/folder\.nix](../modules/main/folder.nix)
 
 
 
@@ -195,8 +195,8 @@ Files contained in this folder
 attribute set of (submodule)
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/paths\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/paths.nix)
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder.nix)
+ - [../modules/main/paths\.nix](../modules/main/paths.nix)
+ - [../modules/main/folder\.nix](../modules/main/folder.nix)
 
 
 
@@ -222,7 +222,7 @@ boolean
 ` true `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file.nix)
+ - [../modules/main/file\.nix](../modules/main/file.nix)
 
 
 
@@ -243,7 +243,7 @@ list of string
 ` [ ] `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file.nix)
+ - [../modules/main/file\.nix](../modules/main/file.nix)
 
 
 
@@ -264,7 +264,7 @@ list of (key)
 ` [ ] `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file.nix)
+ - [../modules/main/file\.nix](../modules/main/file.nix)
 
 
 
@@ -290,7 +290,7 @@ boolean
 ` true `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file.nix)
+ - [../modules/main/file\.nix](../modules/main/file.nix)
 
 
 
@@ -311,7 +311,7 @@ string
 ` "‹name›" `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/file.nix)
+ - [../modules/main/file\.nix](../modules/main/file.nix)
 
 
 
@@ -332,7 +332,7 @@ string *(read only)*
 ` "‹name›/‹name›" `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/paths\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/paths.nix)
+ - [../modules/main/paths\.nix](../modules/main/paths.nix)
 
 
 
@@ -353,7 +353,7 @@ string
 ` "‹name›" `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder.nix)
+ - [../modules/main/folder\.nix](../modules/main/folder.nix)
 
 
 
@@ -374,7 +374,7 @@ string *(read only)*
 ` "‹name›" `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/paths\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/paths.nix)
+ - [../modules/main/paths\.nix](../modules/main/paths.nix)
 
 
 
@@ -395,7 +395,7 @@ strings concatenated with “\\n”
 ` "" `
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder\.nix](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main/folder.nix)
+ - [../modules/main/folder\.nix](../modules/main/folder.nix)
 
 
 
@@ -411,6 +411,6 @@ Path relative to git root
 string
 
 *Declared by:*
- - [/nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main](file:///nix/store/c1rvjnm67y3dj3yg5ngphz126dbl3w89-source/modules/main)
+ - [../modules/main](../modules/main)
 
 

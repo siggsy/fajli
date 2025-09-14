@@ -199,7 +199,7 @@ For a real example see [my configuration](https://gitlab.com/siggsy/the-shire/-/
 
 # Module options
 
-see [generated docs](./docs/generated.md)
+see generated docs for [main](./docs/main.md) and [hosts (only added options)](./docs/hosts.md) modules.
 
 
 # Why

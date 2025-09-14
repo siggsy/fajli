@@ -13,6 +13,10 @@ let
           hosts = mkOption {
             type = listOf str;
             default = config.hosts;
+            description = ''
+              A list of hosts for which this folder should be generated (or encrypted when shared).
+              By default, all hosts are used.
+            '';
           };
         };
       }
@@ -25,31 +29,49 @@ in
     hosts = mkOption {
       type = listOf str;
       default = [ ];
+      description = ''
+        List of hostnames for which files should be generated
+      '';
     };
 
     symmetricEncryption = mkOption {
       type = bool;
       default = false;
+      description = ''
+        Should the files be encrypted symmetrically using host identity files
+      '';
     };
 
     defaultRecipients = mkOption {
       type = listOf lib.fajli.types.key;
       default = [ ];
+      description = ''
+        A list of recepients which, in addition to hosts, should be used when encrpyting asymmetrically.
+      '';
     };
 
     defaultIdentityFiles = mkOption {
       type = listOf str;
       default = [ ];
+      description = ''
+        A list of paths to identity files, which are used when decrypting (or encrypting when using symmetric encryption).
+      '';
     };
 
     perHost = mkOption {
       type = attrsOf extendedFolderModule;
       default = { };
+      description = ''
+        A list of folders generated for each host separately.
+      '';
     };
 
     shared = mkOption {
       type = attrsOf extendedFolderModule;
       default = { };
+      description = ''
+        A list of folders that the hosts should share
+      '';
     };
   };
 

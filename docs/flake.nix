@@ -1,7 +1,7 @@
 {
   inputs = {
     fajli = {
-      url = "github:siggsy/fajli";
+      url = "path:../";
     };
 
     nixpkgs = {
@@ -26,10 +26,30 @@
         "${fajli}/modules/main" ];
       specialArgs = { inherit pkgs lib; };
     }).options;
+
+    optionsHosts = (pkgs.lib.evalModules {
+      modules = [
+        { _module.check = false; }
+        "${fajli}/modules/hosts"
+      ];
+      specialArgs = { inherit pkgs lib; };
+    }).options;
     docs = pkgs.nixosOptionsDoc { inherit options; };
+    docsHosts = pkgs.nixosOptionsDoc { options = optionsHosts; };
   in {
     packages.x86_64-linux.docs = pkgs.runCommandNoCC "docs" {} ''
-      cat ${docs.optionsCommonMark} > $out
+      mkdir -p $out
+      cat ${docs.optionsCommonMark} > $out/main.md
+      sed -i -e 's/\/docs\/\.\.\///g' $out/main.md
+      sed -i -e 's/\/docs\/\\\.\\\.\///g' $out/main.md
+      sed -i -e 's/\/nix\/store\/[^/]*\//..\//g' $out/main.md
+      sed -i -e 's/file\:\/\///g' $out/main.md
+
+      cat ${docsHosts.optionsCommonMark} > $out/hosts.md
+      sed -i -e 's/\/docs\/\.\.\///g' $out/hosts.md
+      sed -i -e 's/\/docs\/\\\.\\\.\///g' $out/hosts.md
+      sed -i -e 's/\/nix\/store\/[^/]*\//..\//g' $out/hosts.md
+      sed -i -e 's/file\:\/\///g' $out/hosts.md
     '';
   };
 }
