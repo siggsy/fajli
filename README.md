@@ -194,6 +194,14 @@ in
 
 ```
 
+For a real example see [my configuration](https://gitlab.com/siggsy/the-shire/-/blob/c3a617238a91864bcf421cde6267fd371c00509d/secrets/secrets.nix)
+
+
+# Module options
+
+see [generated docs](./docs/generated.md)
+
+
 # Why
 
 TODO

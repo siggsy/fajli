@@ -2,11 +2,11 @@
   "nodes": {
     "fajli": {
       "locked": {
-        "lastModified": 1757844866,
-        "narHash": "sha256-u+vLyxIoC1r+Vr5Nb6lemEfdCbUcnDZNO/OYVvO1DF0=",
+        "lastModified": 1757862046,
+        "narHash": "sha256-JDbuXaf9LSnbMi7oDZd2KP5YZLTZd74DZYZ3iox74Wg=",
         "owner": "siggsy",
         "repo": "fajli",
-        "rev": "b8ef5d59e803b3114bc09594ea0b53b859705699",
+        "rev": "07a52a2ecad977a3d9a2ac988f3d49301bcb7d9e",
         "type": "github"
       },
       "original": {
