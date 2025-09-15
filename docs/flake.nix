@@ -44,12 +44,14 @@
       sed -i -e 's/\/docs\/\\\.\\\.\///g' $out/main.md
       sed -i -e 's/\/nix\/store\/[^/]*\//..\//g' $out/main.md
       sed -i -e 's/file\:\/\///g' $out/main.md
+      sed -i '1,63d' $out/main.md
 
       cat ${docsHosts.optionsCommonMark} > $out/hosts.md
       sed -i -e 's/\/docs\/\.\.\///g' $out/hosts.md
       sed -i -e 's/\/docs\/\\\.\\\.\///g' $out/hosts.md
       sed -i -e 's/\/nix\/store\/[^/]*\//..\//g' $out/hosts.md
       sed -i -e 's/file\:\/\///g' $out/hosts.md
+      sed -i '1,63d' $out/hosts.md
     '';
   };
 }
