@@ -94,7 +94,10 @@ def update(
         if in_file.isatty():
             print("Enter file contents (ctrl-d when done):")
         with open(path, 'w') as f:
-            f.write(in_file.read())
+            try:
+                f.write(in_file.read())
+            except KeyboardInterrupt:
+                sys.exit(1)
         return True, True
 
     modify_with(fajli, out_file, modify)

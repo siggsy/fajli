@@ -7,7 +7,7 @@ import subprocess
 
 from collections import OrderedDict
 
-from .utils import Fajli
+from .utils import Fajli, git_root
 from .commands import generate, get, update, edit, rekey
 
 # ,-----------------------------------------------------------------------------
@@ -20,17 +20,21 @@ parser = argparse.ArgumentParser(
 )
 subparsers = parser.add_subparsers(help="subcommand help", dest='command')
 
-parser_generate = subparsers.add_parser('generate', parents=[])
+parser_transact = argparse.ArgumentParser(add_help=False)
+parser_transact.add_argument('--commit', action='store_true', help='should changes be automatically commited?')
+
+
+parser_generate = subparsers.add_parser('generate', parents=[parser_transact])
 parser_get = subparsers.add_parser('get', parents=[])
-parser_rekey = subparsers.add_parser('rekey', parents=[])
-parser_set = subparsers.add_parser('set', parents=[])
-parser_edit = subparsers.add_parser('edit', parents=[])
+parser_rekey = subparsers.add_parser('rekey', parents=[parser_transact])
+parser_set = subparsers.add_parser('set', parents=[parser_transact])
+parser_edit = subparsers.add_parser('edit', parents=[parser_transact])
 parser_dump = subparsers.add_parser('dump', parents=[])
 
 # --  Global  ------------------------------------------------------------------
 
 parser.add_argument('-i', '--identity', action='append', default=[], help='specify extra identities when decrypting')
-parser.add_argument('-p', '--path', action='store', help='override generated folders path')
+parser.add_argument('-C', action='store', help='run as if un another directory')
 
 # --  Generate  ----------------------------------------------------------------
 
@@ -57,41 +61,25 @@ def main() -> int:
     with open(config_path, "r") as c:
         config = json.load(c)
     
-    path = args.path or config['path']
+
+    path = config['path']
+    if args.C: os.chdir(args.C)
 
     # --  Setup environment  ---------------------------------------------------
 
-    if not args.path:
-        cwd = Path(os.getcwd())
-        git_proc = subprocess.Popen(
-            stdout = subprocess.PIPE,
-            stderr = subprocess.PIPE,
-            cwd = cwd.resolve(),
-            args = [ "git", "rev-parse", "--show-toplevel"]
-        )
-        out, err = git_proc.communicate()
-        ret = git_proc.wait()
-        is_git = ret == 0
 
-        if is_git:
-            proj_root = Path(out.rstrip().decode('utf-8'))
-        else:
-            proj_root = cwd
-        
-        fajli_path = Path(proj_root / path).resolve()
-        
-        if proj_root.resolve() not in fajli_path.parents:
-            print("Specified path falls out of the project. Exiting ...")
-            return 1
+    proj_root = git_root() or os.getcwd()
+    fajli_path = Path(proj_root / path).resolve()
+    
+    if proj_root.resolve() not in fajli_path.parents:
+        print("Specified path falls out of the project. Exiting ...")
+        return 1
 
-    else:
-        fajli_path = Path(path)
-        proj_root = fajli_path.parent
 
     os.environ['FAJLI_PROJ_ROOT'] = str(proj_root.resolve())
     os.environ['FAJLI_PATH'] = str(fajli_path.resolve())
 
-    fajli = Fajli(path=fajli_path, config=config, identities=args.identity)
+    fajli = Fajli(path=fajli_path, config=config, identities=args.identity, commit=args.commit)
 
     match args.command:
         case 'generate':

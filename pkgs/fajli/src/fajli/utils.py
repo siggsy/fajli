@@ -7,16 +7,28 @@ import os
 import subprocess
 import shutil
 from contextlib import contextmanager
+import datetime
 import sys
 
 def expanded_path(path: str) -> Path:
     return Path(os.path.expandvars(path))
 
+def git_root() -> Path | None:
+    git_proc = subprocess.Popen(
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE,
+        args = [ "git", "rev-parse", "--show-toplevel"]
+    )
+    out, err = git_proc.communicate()
+    ret = git_proc.wait()
+    return Path(out.rstrip().decode('utf-8')) if ret == 0 else None
+
 class Fajli():
-    def __init__(self, path: str, config: dict[str, Any], identities: list[str]):
+    def __init__(self, path: str, commit: bool, config: dict[str, Any], identities: list[str]):
         self.folders = toposort(config['folders'])
         self.identities = [ expanded_path(i) for i in identities + config['defaultIdentityFiles'] ]
         self.path = Path(path)
+        self.commit = commit
 
     def __iter__(self):
         return map(lambda p: Folder(self, p[0], p[1]), self.folders.items())
@@ -47,7 +59,32 @@ class Fajli():
             shutil.rmtree(self.path, ignore_errors=True)
             shutil.move(workdir, self.path)
 
-            # TODO: git
+            if not self.commit:
+                return
+
+            root = git_root()
+            if not root:
+                return
+
+            if subprocess.call(args = [ 'git', 'add', self.path ]) != 0:
+                sys.exit('Failed to run git add')
+
+            diff_proc = subprocess.Popen(
+                stdout = subprocess.PIPE,
+                stderr = subprocess.PIPE,
+                args = [ 'git', 'diff', '--staged', '--minimal', self.path ]
+            )
+            out, err = diff_proc.communicate()
+            if diff_proc.wait() != 0:
+                sys.exit('failed to run git diff')
+            if not out.rstrip().decode('utf-8'):
+                return
+
+            if subprocess.call(args = [
+                'git', 'commit', '-m',
+                f'Fajli changes @ {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}' ]
+            ) != 0:
+                sys.exit('Falied to run git commit')
 
     
 def toposort(folders: dict[str, Any]) -> OrderedDict[str, Any]:
@@ -187,4 +224,4 @@ class File():
             )
 
             if ret != 0:
-                sys.exit(f"Failed decrypting file {cfg['path']}")
+                sys.exit(f"Failed decrypting file {self.cfg['path']}")
