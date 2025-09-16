@@ -79,7 +79,12 @@ def main() -> int:
     os.environ['FAJLI_PROJ_ROOT'] = str(proj_root.resolve())
     os.environ['FAJLI_PATH'] = str(fajli_path.resolve())
 
-    fajli = Fajli(path=fajli_path, config=config, identities=args.identity, commit=args.commit)
+    fajli = Fajli(
+        path=fajli_path,
+        config=config,
+        identities=args.identity,
+        commit=args.commit
+    )
 
     match args.command:
         case 'generate':
