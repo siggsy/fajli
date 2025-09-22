@@ -198,7 +198,7 @@ class File():
             )
 
             if ret != 0:
-                sys.exit(f"Failed encrypting file {cfg['path']}")
+                sys.exit(f"Failed encrypting file {self.cfg['path']}")
 
     def decrypt(self):
         if not self.age_enabled():
