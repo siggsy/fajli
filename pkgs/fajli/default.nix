@@ -6,7 +6,7 @@
   build-system = with python3Packages; [ setuptools ];
   
   makeWrapperArgs = [
+    "--set" "PATH" "${lib.makeBinPath [ bash coreutils diffutils age gitMinimal ]}"
     "--set" "FAJLI_CONFIG" "${writeText "fajli-config" (builtins.toJSON fajliConfig)}"
-    "--set" "FAJLI_STDENV" "${lib.makeBinPath [ bash coreutils diffutils age gitMinimal ]}"
   ];
 }

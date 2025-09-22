@@ -126,9 +126,8 @@ class Folder():
             if folder_path.exists() and not force:
                 return False
 
-            retained = { k: os.environ[k] for k in ['FAJLI_PATH', 'FAJLI_PROJ_ROOT'] }
+            retained = { k: os.environ[k] for k in ['FAJLI_PATH', 'FAJLI_PROJ_ROOT', 'PATH'] }
             env = retained | {
-                'PATH': os.environ.get('FAJLI_STDENV'),
                 'out': str(out),
             }
 
