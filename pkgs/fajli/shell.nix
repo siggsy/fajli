@@ -13,12 +13,4 @@ pkgs.mkShell {
     age
     pkgs.git
   ];
-
-  FAJLI_STDENV = pkgs.lib.makeBinPath [
-    pkgs.bash
-    pkgs.coreutils
-    pkgs.diffutils
-    pkgs.age
-    pkgs.git
-  ];
 }

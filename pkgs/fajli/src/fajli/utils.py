@@ -213,9 +213,6 @@ class File():
                 ident_args += [ "-i", ident.as_posix() ]
 
             ret = subprocess.call(
-                env = {
-                    'PATH': os.environ.get('FAJLI_STDENV'),
-                },
                 args = [
                     "age", "--decrypt", *ident_args,
                     "-o", file_org.resolve(), file_enc.resolve()
