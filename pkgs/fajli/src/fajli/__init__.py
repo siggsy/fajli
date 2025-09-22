@@ -23,7 +23,6 @@ subparsers = parser.add_subparsers(help="subcommand help", dest='command')
 parser_transact = argparse.ArgumentParser(add_help=False)
 parser_transact.add_argument('--commit', action='store_true', help='should changes be automatically commited?')
 
-
 parser_generate = subparsers.add_parser('generate', parents=[parser_transact])
 parser_get = subparsers.add_parser('get', parents=[])
 parser_rekey = subparsers.add_parser('rekey', parents=[parser_transact])
@@ -34,7 +33,7 @@ parser_dump = subparsers.add_parser('dump', parents=[])
 # --  Global  ------------------------------------------------------------------
 
 parser.add_argument('-i', '--identity', action='append', default=[], help='specify extra identities when decrypting')
-parser.add_argument('-C', action='store', help='run as if un another directory')
+parser.add_argument('-C', metavar='path', action='store', help='run as if in another directory')
 
 # --  Generate  ----------------------------------------------------------------
 
@@ -75,7 +74,6 @@ def main() -> int:
         print("Specified path falls out of the project. Exiting ...")
         return 1
 
-
     os.environ['FAJLI_PROJ_ROOT'] = str(proj_root.resolve())
     os.environ['FAJLI_PATH'] = str(fajli_path.resolve())
 
@@ -83,7 +81,7 @@ def main() -> int:
         path=fajli_path,
         config=config,
         identities=args.identity,
-        commit=args.commit
+        commit=args.commit if 'commit' in args else False
     )
 
     match args.command:
